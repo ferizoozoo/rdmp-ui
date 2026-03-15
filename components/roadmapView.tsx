@@ -25,7 +25,6 @@ export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
     { id: 'projects', label: 'Projects' },
   ];
 
-  // Build lookup maps so timeline can resolve skill/project details
   const skillMap = Object.fromEntries(roadmap.skills.map((s) => [s.name, s]));
   const projectMap = Object.fromEntries(roadmap.projects.map((p) => [p.name, p]));
 
@@ -77,20 +76,15 @@ export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
                 const col = c(i);
                 return (
                   <div key={i} className="flex gap-8 relative pb-10 last:pb-0">
-                    {/* Month bubble */}
                     <div className="flex-shrink-0 z-10">
                       <div className={`w-10 h-10 rounded-full ${col.accent} flex items-center justify-center text-neutral-950 font-black text-sm`}>
                         {item.month}
                       </div>
                     </div>
-
-                    {/* Card */}
                     <div className={`flex-1 border ${col.border} bg-neutral-900/50 rounded-xl p-5 flex flex-col gap-4`}>
                       <p className={`text-xs font-semibold uppercase tracking-widest ${col.text}`}>
                         Month {item.month}
                       </p>
-
-                      {/* Skills this month */}
                       {item.skillsToLearn.length > 0 && (
                         <div>
                           <p className="text-xs text-neutral-500 uppercase tracking-widest mb-2">Skills</p>
@@ -106,8 +100,6 @@ export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
                           </div>
                         </div>
                       )}
-
-                      {/* Projects this month */}
                       {item.projectsToBuild.length > 0 && (
                         <div>
                           <p className="text-xs text-neutral-500 uppercase tracking-widest mb-2">Projects</p>
@@ -158,12 +150,33 @@ export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
                       Resources
                     </p>
                     <ul className="flex flex-col gap-1">
-                      {skill.resources.map((r, j) => (
-                        <li key={j} className="text-xs text-neutral-500 flex items-start gap-2">
-                          <span className="text-neutral-700 mt-0.5">–</span> {r}
-                        </li>
-                      ))}
-                    </ul>
+  {skill.resources.map((r, j) => {
+    let isUrl = false
+    let hostname = r
+    try {
+      const parsed = new URL(r)
+      isUrl = true
+      hostname = parsed.hostname.replace('www.', '')
+    } catch {}
+    return (
+      <li key={j} className="text-xs text-neutral-500 flex items-start gap-2">
+        <span className="text-neutral-700 mt-0.5">–</span>
+        {isUrl ? (
+         <a 
+            href={r}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 decoration-neutral-700 hover:text-neutral-300 hover:decoration-neutral-400 transition-colors"
+          >
+            {hostname}
+          </a>
+        ) : (
+          <span>{r}</span>
+        )}
+      </li>
+    )
+  })}
+</ul>
                   </div>
                 </div>
               );
@@ -176,7 +189,6 @@ export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {roadmap.projects.map((project, i) => {
               const col = c(i);
-              // Find which month this project appears in
               const appearsInMonth = roadmap.timeline.find((t) =>
                 t.projectsToBuild.includes(project.name)
               )?.month;
@@ -199,12 +211,33 @@ export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
                       Resources
                     </p>
                     <ul className="flex flex-col gap-1">
-                      {project.resources.map((r, j) => (
-                        <li key={j} className="text-xs text-neutral-500 flex items-start gap-2">
-                          <span className="text-neutral-700 mt-0.5">–</span> {r}
-                        </li>
-                      ))}
-                    </ul>
+  {project.resources.map((r, j) => {
+    let isUrl = false
+    let hostname = r
+    try {
+      const parsed = new URL(r)
+      isUrl = true
+      hostname = parsed.hostname.replace('www.', '')
+    } catch {}
+    return (
+      <li key={j} className="text-xs text-neutral-500 flex items-start gap-2">
+        <span className="text-neutral-700 mt-0.5">–</span>
+        {isUrl ? (
+          <a
+            href={r}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 decoration-neutral-700 hover:text-neutral-300 hover:decoration-neutral-400 transition-colors"
+          >
+            {hostname}
+          </a>
+        ) : (
+          <span>{r}</span>
+        )}
+      </li>
+    )
+  })}
+</ul>
                   </div>
                 </div>
               );
