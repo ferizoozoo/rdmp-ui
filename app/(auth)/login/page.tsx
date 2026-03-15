@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { login } from '../lib/services/auth.service';
+import { login } from '../../lib/services/auth.service';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -141,7 +141,7 @@ export default function LoginPage() {
 
           <p className="text-xs text-neutral-600 text-center mt-8">
             Don&apos;t have an account?{' '}
-            <a href="#" className="text-orange-500 hover:text-orange-400 transition-colors">
+            <a href="signup" className="text-orange-500 hover:text-orange-400 transition-colors">
               Sign up
             </a>
           </p>

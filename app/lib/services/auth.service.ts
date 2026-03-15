@@ -9,3 +9,15 @@ export async function login(email: string, password: string): Promise<{ success:
     const data = await res.json();
     return data;
 }
+
+export async function register(email: string, password: string): Promise<{ success: boolean; token?: string; error?: string }> {
+    const res = await fetch('http://localhost:5018/user/register', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+    })
+    const data = await res.json();
+    return data;
+}
