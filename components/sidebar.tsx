@@ -22,7 +22,7 @@ export default function Sidebar() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed top-4 left-4 z-50 p-2 rounded-md bg-white border border-gray-200
-                   hover:bg-gray-50 transition-colors"
+                   hover:bg-gray-50 transition-colors cursor-pointer"
         aria-label="Toggle menu"
       >
         <div className="flex flex-col gap-1.5 w-5">
