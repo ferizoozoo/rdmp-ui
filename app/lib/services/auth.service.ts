@@ -1,4 +1,4 @@
-export async function login(email: string, password: string): Promise<{ success: boolean; token?: string; error?: string }> {
+export async function login(email: string, password: string): Promise<{token: string | null}> {
     const res = await fetch('http://localhost:5018/user/login', {
         method: 'POST',
         headers: {
@@ -10,7 +10,7 @@ export async function login(email: string, password: string): Promise<{ success:
     return data;
 }
 
-export async function register(email: string, password: string): Promise<{ success: boolean; token?: string; error?: string }> {
+export async function register(email: string, password: string): Promise<{token: string | null}> {
     const res = await fetch('http://localhost:5018/user/register', {
         method: 'POST',
         headers: {

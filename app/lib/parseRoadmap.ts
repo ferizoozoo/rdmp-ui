@@ -1,4 +1,4 @@
-import { Roadmap } from '../types/roadmap';
+import { Roadmap } from '@/app/types/roadmap';
 
 export function parseRoadmap(raw: string): Roadmap | null {
   try {

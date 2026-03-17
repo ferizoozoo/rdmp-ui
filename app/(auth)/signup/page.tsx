@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { register } from '@/app/lib/services/auth.service';
 
 export default function SignupPage() {
-  const router = useRouter();
+  // const router = useRouter();
   const [form, setForm] = useState({ email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -34,6 +35,7 @@ export default function SignupPage() {
         return;
       }
 
+      localStorage.setItem('token', res)
       router.push('/');
     } catch {
       setError('Could not reach the server. Try again.');

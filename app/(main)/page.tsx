@@ -3,7 +3,6 @@ import { Linkbar } from "@/components/linkbar";
 import RoadmapView from "@/components/roadmapView";
 import { parseRoadmap } from "@/app/lib/parseRoadmap";
 import { Roadmap } from "@/app/types/roadmap";
-import Image from "next/image";
 import { useState } from "react";
 
 export default function Home() {

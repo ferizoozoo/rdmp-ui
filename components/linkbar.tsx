@@ -1,4 +1,5 @@
 'use client';
+import { addRoadmap } from "@/app/lib/services/roadmap.service";
 import React, { useState } from "react";
 
 export const Linkbar = ({ setIsLoading, setRoadmap }: { setIsLoading: React.Dispatch<React.SetStateAction<boolean>>; setRoadmap: React.Dispatch<React.SetStateAction<any>> }) => {
@@ -10,16 +11,8 @@ export const Linkbar = ({ setIsLoading, setRoadmap }: { setIsLoading: React.Disp
     e.preventDefault();
     const splitLinks = linksInput.split("\n").map(link => link.trim()).filter(link => link !== "");
     setLinks(splitLinks);
-    const res = await fetch("http://localhost:5018/ai/roadmap", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ links: splitLinks }),
-    });
-    const data = await res.json();
-    console.log(data);
-    setRoadmap(data.roadmap);
+    const res = await addRoadmap(splitLinks); 
+    setRoadmap(res.roadmap);
     setLinks([]);
     setIsLoading(false);
   };
