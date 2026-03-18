@@ -1,8 +1,7 @@
 'use client';
 
 import { createContext, useEffect, useState } from 'react';
-import { User } from '@/app/types/user';
-import { jwtDecode } from 'jwt-decode';
+import { useRouter } from 'next/navigation';
 
 interface UserContextType {
     token: string | null;
@@ -15,6 +14,7 @@ export const UserContext = createContext<UserContextType | null>(null);
 
 export default function UserProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
+  const router = useRouter();
 
   // Restore session on mount
   useEffect(() => {
@@ -32,6 +32,7 @@ export default function UserProvider({ children }: { children: React.ReactNode }
   function logout() {
     localStorage.removeItem('token');
     setToken(null);
+    router.push('/login');
   }
 
   return (

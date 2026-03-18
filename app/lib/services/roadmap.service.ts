@@ -1,5 +1,5 @@
 export async function addRoadmap(splitLinks: string[]) {
-  const res = await fetch("http://localhost:5018/ai/roadmap", {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_SERVER_URL}/ai/roadmap`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

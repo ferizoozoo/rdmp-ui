@@ -1,5 +1,5 @@
 export async function login(email: string, password: string): Promise<{token: string | null}> {
-    const res = await fetch('http://localhost:5018/user/login', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_SERVER_URL}/user/login`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -11,7 +11,7 @@ export async function login(email: string, password: string): Promise<{token: st
 }
 
 export async function register(email: string, password: string): Promise<{token: string | null}> {
-    const res = await fetch('http://localhost:5018/user/register', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_SERVER_URL}/user/register`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
