@@ -11,7 +11,7 @@ export default function Home() {
   const roadmap: Roadmap | null = rawRoadmap ? parseRoadmap(rawRoadmap) : null;
 
   if (roadmap) {
-    return <RoadmapView roadmap={roadmap} />;
+    return <RoadmapView key={rawRoadmap} roadmap={roadmap} />;
   }
 
   return (

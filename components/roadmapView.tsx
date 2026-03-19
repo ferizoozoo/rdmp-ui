@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Roadmap } from '../app/types/roadmap';
 
 const COLORS = [
@@ -16,8 +16,43 @@ const c = (i: number) => COLORS[i % COLORS.length];
 
 type Tab = 'timeline' | 'skills' | 'projects';
 
+type CompletionState = {
+  skills: string[];
+  projects: string[];
+};
+
+function readCompletionState(storageKey: string): CompletionState {
+  const emptyState: CompletionState = { skills: [], projects: [] };
+
+  if (typeof window === 'undefined') {
+    return emptyState;
+  }
+
+  const stored = localStorage.getItem(storageKey);
+
+  if (!stored) {
+    return emptyState;  debugger;
+  }
+
+  try {
+    const parsed = JSON.parse(stored) as CompletionState;
+    return {
+      skills: parsed.skills ?? [],
+      projects: parsed.projects ?? [],
+    };
+  } catch {
+    return emptyState;
+  }
+}
+
 export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
+  const roadmapStorageKey = `rdmp-progress:${JSON.stringify(roadmap)}`;
   const [activeTab, setActiveTab] = useState<Tab>('timeline');
+  const [completionState, setCompletionState] = useState<CompletionState>(() =>
+    readCompletionState(roadmapStorageKey)
+  );
+  const completedSkills = completionState.skills;
+  const completedProjects = completionState.projects;
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'timeline', label: 'Timeline' },
@@ -25,8 +60,34 @@ export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
     { id: 'projects', label: 'Projects' },
   ];
 
-  const skillMap = Object.fromEntries(roadmap.skills.map((s) => [s.name, s]));
   const projectMap = Object.fromEntries(roadmap.projects.map((p) => [p.name, p]));
+  const completedSkillSet = new Set(completedSkills);
+  const completedProjectSet = new Set(completedProjects);
+  const totalItems = roadmap.skills.length + roadmap.projects.length;
+  const completedItems = completedSkills.length + completedProjects.length;
+  const completionPercent = totalItems === 0 ? 0 : Math.round((completedItems / totalItems) * 100);
+
+  useEffect(() => {
+    localStorage.setItem(roadmapStorageKey, JSON.stringify(completionState));
+  }, [completionState, roadmapStorageKey]);
+
+  const toggleSkill = (name: string) => {
+    setCompletionState((current) => ({
+      ...current,
+      skills: current.skills.includes(name)
+        ? current.skills.filter((item) => item !== name)
+        : [...current.skills, name],
+    }));
+  };
+
+  const toggleProject = (name: string) => {
+    setCompletionState((current) => ({
+      ...current,
+      projects: current.projects.includes(name)
+        ? current.projects.filter((item) => item !== name)
+        : [...current.projects, name],
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100">
@@ -46,6 +107,18 @@ export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
         <p className="text-neutral-400 text-sm max-w-md leading-relaxed font-light">
           {roadmap.skills.length} skills · {roadmap.projects.length} projects · {roadmap.timeline.length} months
         </p>
+        <div className="mt-8 max-w-md">
+          <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-neutral-500">
+            <span>Progress</span>
+            <span>{completedItems}/{totalItems} completed</span>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-neutral-900">
+            <div
+              className="h-full rounded-full bg-orange-500 transition-all duration-300"
+              style={{ width: `${completionPercent}%` }}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -90,12 +163,19 @@ export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
                           <p className="text-xs text-neutral-500 uppercase tracking-widest mb-2">Skills</p>
                           <div className="flex flex-wrap gap-2">
                             {item.skillsToLearn.map((name, j) => (
-                              <span
+                              <button
                                 key={j}
-                                className={`text-xs px-2.5 py-1 rounded-full ${col.light} ${col.text} border ${col.border}`}
+                                type="button"
+                                onClick={() => toggleSkill(name)}
+                                aria-pressed={completedSkillSet.has(name)}
+                                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                                  completedSkillSet.has(name)
+                                    ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300 line-through'
+                                    : `${col.light} ${col.text} ${col.border} hover:border-orange-400/50`
+                                }`}
                               >
-                                {name}
-                              </span>
+                                {completedSkillSet.has(name) ? `Done · ${name}` : name}
+                              </button>
                             ))}
                           </div>
                         </div>
@@ -107,15 +187,29 @@ export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
                             {item.projectsToBuild.map((name, j) => {
                               const proj = projectMap[name];
                               return (
-                                <div key={j} className="flex items-start gap-2">
-                                  <span className="text-neutral-600 text-xs mt-0.5">→</span>
+                                <button
+                                  key={j}
+                                  type="button"
+                                  onClick={() => toggleProject(name)}
+                                  aria-pressed={completedProjectSet.has(name)}
+                                  className={`flex items-start gap-2 rounded-lg px-2 py-1.5 -mx-2 text-left transition-colors ${
+                                    completedProjectSet.has(name)
+                                      ? 'bg-emerald-500/10'
+                                      : 'hover:bg-neutral-800/70'
+                                  }`}
+                                >
+                                  <span className={`text-xs mt-0.5 ${completedProjectSet.has(name) ? 'text-emerald-400' : 'text-neutral-600'}`}>
+                                    {completedProjectSet.has(name) ? '✓' : '→'}
+                                  </span>
                                   <div>
-                                    <p className="text-sm text-neutral-200">{name}</p>
+                                    <p className={`text-sm ${completedProjectSet.has(name) ? 'text-emerald-200 line-through' : 'text-neutral-200'}`}>
+                                      {name}
+                                    </p>
                                     {proj && (
                                       <p className="text-xs text-neutral-500 font-light">{proj.description}</p>
                                     )}
                                   </div>
-                                </div>
+                                </button>
                               );
                             })}
                           </div>
@@ -136,13 +230,26 @@ export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
               const col = c(i);
               return (
                 <div key={i} className={`border ${col.border} ${col.light} rounded-xl p-6 flex flex-col gap-4`}>
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${col.dot}`} />
-                    <h3 className="font-semibold text-neutral-100 text-sm tracking-wide">
-                      {skill.name}
-                    </h3>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${completedSkillSet.has(skill.name) ? 'bg-emerald-400' : col.dot}`} />
+                      <h3 className={`font-semibold text-sm tracking-wide ${completedSkillSet.has(skill.name) ? 'text-emerald-100' : 'text-neutral-100'}`}>
+                        {skill.name}
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toggleSkill(skill.name)}
+                      className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-widest transition-colors ${
+                        completedSkillSet.has(skill.name)
+                          ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
+                          : `${col.border} ${col.text} hover:border-orange-400/50 hover:text-orange-300`
+                      }`}
+                    >
+                      {completedSkillSet.has(skill.name) ? 'Completed' : 'Mark done'}
+                    </button>
                   </div>
-                  <p className="text-neutral-400 text-sm leading-relaxed font-light">
+                  <p className={`text-sm leading-relaxed font-light ${completedSkillSet.has(skill.name) ? 'text-neutral-500' : 'text-neutral-400'}`}>
                     {skill.description}
                   </p>
                   <div className="mt-auto pt-4 border-t border-neutral-800">
@@ -196,14 +303,36 @@ export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
               return (
                 <div key={i} className={`border ${col.border} bg-neutral-900/50 rounded-xl p-6 flex flex-col gap-4`}>
                   <div className="flex items-start justify-between gap-4">
-                    <h3 className="font-semibold text-neutral-100 text-base">{project.name}</h3>
-                    {appearsInMonth && (
-                      <span className={`flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${col.light} ${col.text} border ${col.border}`}>
-                        Month {appearsInMonth}
-                      </span>
-                    )}
+                    <div className="flex flex-col gap-2">
+                      <h3 className={`font-semibold text-base ${completedProjectSet.has(project.name) ? 'text-emerald-100 line-through' : 'text-neutral-100'}`}>
+                        {project.name}
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {appearsInMonth && (
+                          <span className={`flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${col.light} ${col.text} border ${col.border}`}>
+                            Month {appearsInMonth}
+                          </span>
+                        )}
+                        {completedProjectSet.has(project.name) && (
+                          <span className="flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-500/40 bg-emerald-500/15 text-emerald-300">
+                            Completed
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toggleProject(project.name)}
+                      className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-widest transition-colors ${
+                        completedProjectSet.has(project.name)
+                          ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
+                          : `${col.border} ${col.text} hover:border-orange-400/50 hover:text-orange-300`
+                      }`}
+                    >
+                      {completedProjectSet.has(project.name) ? 'Undo' : 'Mark done'}
+                    </button>
                   </div>
-                  <p className="text-neutral-400 text-sm leading-relaxed font-light">
+                  <p className={`text-sm leading-relaxed font-light ${completedProjectSet.has(project.name) ? 'text-neutral-500' : 'text-neutral-400'}`}>
                     {project.description}
                   </p>
                   <div className="mt-auto pt-4 border-t border-neutral-800">
