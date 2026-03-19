@@ -1,4 +1,4 @@
-export async function login(email: string, password: string): Promise<{token: string | null, refreshToken: string | null}> {
+export async function login(email: string, password: string): Promise<{accessToken: string | null, refreshToken: string | null}> {
     const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_SERVER_URL}/user/login`, {
         method: 'POST',
         headers: {
@@ -10,7 +10,7 @@ export async function login(email: string, password: string): Promise<{token: st
     return data;
 }
 
-export async function register(email: string, password: string): Promise<{token: string | null, refreshToken: string | null}> {
+export async function register(email: string, password: string): Promise<{accessToken: string | null, refreshToken: string | null}> {
     const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_SERVER_URL}/user/register`, {
         method: 'POST',
         headers: {

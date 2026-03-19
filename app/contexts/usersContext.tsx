@@ -18,19 +18,19 @@ export default function UserProvider({ children }: { children: React.ReactNode }
 
   // Restore session on mount
   useEffect(() => {
-    const stored = localStorage.getItem('token');
+    const stored = localStorage.getItem('accessToken');
     if (stored) {
       setToken(stored);
     }
   }, []);
 
   function login(newToken: string) {
-    localStorage.setItem('token', newToken);
+    localStorage.setItem('accessToken', newToken);
     setToken(newToken);
   }
 
   function logout() {
-    localStorage.removeItem('token');
+    localStorage.removeItem('accessToken');
     setToken(null);
     router.push('/login');
   }

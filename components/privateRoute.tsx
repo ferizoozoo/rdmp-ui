@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('accessToken');
   const router = useRouter();
 
   useEffect(() => {
