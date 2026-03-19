@@ -30,7 +30,8 @@ export default function LoginPage() {
         return;
       }
 
-      localStorage.setItem('token', result);
+      localStorage.setItem('token', result.accessToken);
+      localStorage.setItem('refreshToken', result.refreshToken);
       router.push('/');
     } catch {
       setError('An error occurred.');

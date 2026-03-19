@@ -28,14 +28,14 @@ export default function SignupPage() {
     setError(null);
 
     try {
-        debugger;
       const res = await register(form.email, form.password); 
       if (!res) {
         setError('Something went wrong.');
         return;
       }
 
-      localStorage.setItem('token', res)
+      localStorage.setItem('token', res.accessToken)
+      localStorage.setItem('refreshToken', res.refreshToken)
       router.push('/');
     } catch {
       setError('Could not reach the server. Try again.');
