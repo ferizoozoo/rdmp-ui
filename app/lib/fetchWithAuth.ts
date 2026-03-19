@@ -1,14 +1,14 @@
 import { refresh, refreshToken } from '@/app/lib/services/auth.service';
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('token');
+  const accessToken = localStorage.getItem('accessToken');
   const refreshTokenValue = localStorage.getItem('refreshToken');
 
   const res = await fetch(url, {
     ...options,
     headers: {
       ...options.headers,
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
   });
@@ -22,7 +22,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
       return res;
     }
 
-    localStorage.setItem('token', newToken);
+    localStorage.setItem('accessToken', newToken);
     if (newRefreshToken) {
       localStorage.setItem('refreshToken', newRefreshToken);
     } 
