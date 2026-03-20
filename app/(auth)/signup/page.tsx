@@ -34,7 +34,7 @@ export default function SignupPage() {
         return;
       }
 
-      localStorage.setItem('token', res.accessToken)
+      localStorage.setItem('accessToken', res.accessToken)
       localStorage.setItem('refreshToken', res.refreshToken)
       router.push('/');
     } catch {
