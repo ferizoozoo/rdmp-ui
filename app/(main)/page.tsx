@@ -1,17 +1,15 @@
 'use client';
 import { Linkbar } from "@/components/linkbar";
 import RoadmapView from "@/components/roadmapView";
-import { parseRoadmap } from "@/app/lib/parseRoadmap";
 import { Roadmap } from "@/app/types/roadmap";
 import { useState } from "react";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
-  const [rawRoadmap, setRawRoadmap] = useState<string | null>(null);
-  const roadmap: Roadmap | null = rawRoadmap ? parseRoadmap(rawRoadmap) : null;
+  const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
 
   if (roadmap) {
-    return <RoadmapView key={rawRoadmap} roadmap={roadmap} />;
+    return <RoadmapView key={roadmap.id || JSON.stringify(roadmap)} roadmap={roadmap} />;
   }
 
   return (
@@ -27,7 +25,7 @@ export default function Home() {
           <p className="text-neutral-500 text-sm font-light">
             Paste job posting links to generate your personalized roadmap
           </p>
-          <Linkbar setIsLoading={setIsLoading} setRoadmap={setRawRoadmap} />
+          <Linkbar setIsLoading={setIsLoading} setRoadmap={setRoadmap} />
         </>
       ) : (
         <div className="flex flex-col items-center gap-4">

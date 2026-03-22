@@ -17,6 +17,7 @@ export type RoadmapMonth = {
 };
 
 export type Roadmap = {
+  id: string;
   skills: RoadmapSkill[];
   projects: RoadmapProject[];
   timeline: RoadmapMonth[];

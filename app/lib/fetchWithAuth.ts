@@ -1,4 +1,4 @@
-import { refresh, refreshToken } from '@/app/lib/services/auth.service';
+import { refresh } from '@/app/lib/services/auth.service';
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
   const accessToken = localStorage.getItem('accessToken');

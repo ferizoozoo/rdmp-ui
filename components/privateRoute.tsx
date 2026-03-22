@@ -1,10 +1,16 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const token = localStorage.getItem('accessToken');
+  const [token] = useState<string | null>(() => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    return localStorage.getItem('accessToken');
+  });
   const router = useRouter();
 
   useEffect(() => {

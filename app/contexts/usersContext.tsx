@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useEffect, useState } from 'react';
+import { createContext, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface UserContextType {
@@ -13,16 +13,14 @@ interface UserContextType {
 export const UserContext = createContext<UserContextType | null>(null);
 
 export default function UserProvider({ children }: { children: React.ReactNode }) {
-  const [token, setToken] = useState<string | null>(null);
-  const router = useRouter();
-
-  // Restore session on mount
-  useEffect(() => {
-    const stored = localStorage.getItem('accessToken');
-    if (stored) {
-      setToken(stored);
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window === 'undefined') {
+      return null;
     }
-  }, []);
+
+    return localStorage.getItem('accessToken');
+  });
+  const router = useRouter();
 
   function login(newToken: string) {
     localStorage.setItem('accessToken', newToken);

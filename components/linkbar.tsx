@@ -1,20 +1,21 @@
 'use client';
 import { addRoadmap } from "@/app/lib/services/roadmap.service";
+import { Roadmap } from "@/app/types/roadmap";
 import React, { useState } from "react";
 
-export const Linkbar = ({ setIsLoading, setRoadmap }: { setIsLoading: React.Dispatch<React.SetStateAction<boolean>>; setRoadmap: React.Dispatch<React.SetStateAction<any>> }) => {
-  const [links, setLinks] = useState<string[]>([]);
+export const Linkbar = ({ setIsLoading, setRoadmap }: { setIsLoading: React.Dispatch<React.SetStateAction<boolean>>; setRoadmap: React.Dispatch<React.SetStateAction<Roadmap | null>> }) => {
   const [linksInput, setLinksInput] = useState<string>("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     setIsLoading(true);
     e.preventDefault();
     const splitLinks = linksInput.split("\n").map(link => link.trim()).filter(link => link !== "");
-    setLinks(splitLinks);
-    const res = await addRoadmap(splitLinks); 
-    setRoadmap(res.roadmap);
-    setLinks([]);
-    setIsLoading(false);
+    try {
+      const roadmap = await addRoadmap(splitLinks);
+      setRoadmap(roadmap);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
