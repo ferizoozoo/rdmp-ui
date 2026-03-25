@@ -1,35 +1,83 @@
 'use client';
-import { Linkbar } from "@/components/linkbar";
-import RoadmapView from "@/components/roadmapView";
-import { Roadmap } from "@/app/types/roadmap";
-import { useState } from "react";
 
-export default function Home() {
+import Link from 'next/link';
+import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  cacheRoadmap,
+  getUserIdFromToken,
+  readRoadmapHistory,
+  RoadmapHistoryEntry,
+} from '@/app/lib/roadmap/utils';
+import { Linkbar } from '@/components/linkbar';
+import useUser from '@/app/hooks/useUser';
+
+export default function RoadmapFlow() {
+  const router = useRouter();
+  const { token } = useUser();
   const [isLoading, setIsLoading] = useState(false);
-  const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
+  const history = useMemo<RoadmapHistoryEntry[]>(() => {
+    if (!token) {
+      return [];
+    }
 
-  if (roadmap) {
-    return <RoadmapView key={roadmap.id || JSON.stringify(roadmap)} roadmap={roadmap} />;
-  }
+    const userId = getUserIdFromToken(token);
+
+    return userId ? readRoadmapHistory(userId) : [];
+  }, [token]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center gap-6 justify-center p-24 bg-neutral-950 text-neutral-100">
+    <main className="flex h-screen flex-col items-center justify-center gap-10 overflow-hidden bg-neutral-950 px-24 pb-24 pt-32 text-neutral-100">
       {!isLoading ? (
         <>
-          <p className="text-xs tracking-[0.2em] uppercase text-neutral-500">
-            Your Learning Path
-          </p>
-          <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-none text-center">
+          <p className="text-xs uppercase tracking-[0.2em] text-neutral-500">Your Learning Path</p>
+          <h1 className="text-center text-5xl font-black leading-none tracking-tight md:text-7xl">
             Welcome to <span className="text-orange-500">RDMP</span>
           </h1>
-          <p className="text-neutral-500 text-sm font-light">
+          <p className="text-sm font-light text-neutral-500">
             Paste job posting links to generate your personalized roadmap
           </p>
-          <Linkbar setIsLoading={setIsLoading} setRoadmap={setRoadmap} />
+          <Linkbar
+            setIsLoading={setIsLoading}
+            onRoadmapCreated={(roadmap) => {
+              cacheRoadmap(roadmap);
+              router.push(`/roadmap?id=${encodeURIComponent(roadmap.id)}`);
+            }}
+          />
+          {history.length > 0 && (
+            <section className="flex max-h-[26rem] w-full max-w-5xl flex-col rounded-3xl border border-neutral-800 bg-neutral-900/40 p-6">
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-neutral-500">Previous Roadmaps</p>
+                  <h2 className="mt-2 text-2xl font-black tracking-tight text-neutral-100">
+                    Continue where you left off
+                  </h2>
+                </div>
+              </div>
+              <div className="grid flex-1 gap-3 overflow-y-auto pr-2 md:grid-cols-2">
+                {history.map((entry) => (
+                  <Link
+                    key={entry.id}
+                    href={`/roadmap?id=${encodeURIComponent(entry.id)}`}
+                    className="rounded-2xl border border-neutral-800 bg-neutral-950/80 p-4 transition-colors hover:border-orange-500/40 hover:bg-neutral-900"
+                  >
+                    <p className="text-xs uppercase tracking-[0.2em] text-neutral-500">
+                      Roadmap #{entry.id}
+                    </p>
+                    <h3 className="mt-2 text-lg font-bold text-neutral-100">{entry.title}</h3>
+                    <p className="mt-1 text-sm text-neutral-400">{entry.summary}</p>
+                    <p className="mt-3 text-xs text-neutral-600">
+                      Saved {new Date(entry.createdAt).toLocaleString()}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
         </>
       ) : (
         <div className="flex flex-col items-center gap-4">
-          <p className="text-neutral-500 text-sm tracking-widest uppercase animate-pulse">
+          <p className="animate-pulse text-sm uppercase tracking-widest text-neutral-500">
             Building your roadmap...
           </p>
         </div>

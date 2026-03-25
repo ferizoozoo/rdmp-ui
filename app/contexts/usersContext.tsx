@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useState } from 'react';
+import { createContext, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface UserContextType {
@@ -12,29 +12,58 @@ interface UserContextType {
 
 export const UserContext = createContext<UserContextType | null>(null);
 
-export default function UserProvider({ children }: { children: React.ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => {
-    if (typeof window === 'undefined') {
-      return null;
-    }
+const AUTH_TOKEN_EVENT = 'rdmp-auth-token-change';
 
-    return localStorage.getItem('accessToken');
-  });
+function subscribe(onStoreChange: () => void) {
+  window.addEventListener('storage', onStoreChange);
+  window.addEventListener(AUTH_TOKEN_EVENT, onStoreChange);
+
+  return () => {
+    window.removeEventListener('storage', onStoreChange);
+    window.removeEventListener(AUTH_TOKEN_EVENT, onStoreChange);
+  };
+}
+
+function getSnapshot() {
+  return localStorage.getItem('accessToken');
+}
+
+function getServerSnapshot() {
+  return null;
+}
+
+export default function UserProvider({ children }: { children: React.ReactNode }) {
+  const token = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const router = useRouter();
 
   function login(newToken: string) {
     localStorage.setItem('accessToken', newToken);
-    setToken(newToken);
+    window.dispatchEvent(new Event(AUTH_TOKEN_EVENT));
   }
 
   function logout() {
     localStorage.removeItem('accessToken');
-    setToken(null);
+    window.dispatchEvent(new Event(AUTH_TOKEN_EVENT));
     router.push('/login');
   }
 
   return (
-    <UserContext value={{ token, setToken, login, logout }}>
+    <UserContext
+      value={{
+        token,
+        setToken: (nextToken) => {
+          if (nextToken) {
+            localStorage.setItem('accessToken', nextToken);
+          } else {
+            localStorage.removeItem('accessToken');
+          }
+
+          window.dispatchEvent(new Event(AUTH_TOKEN_EVENT));
+        },
+        login,
+        logout,
+      }}
+    >
       {children}
     </UserContext>
   );
