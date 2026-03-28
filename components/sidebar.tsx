@@ -48,7 +48,6 @@ export default function Sidebar() {
         }
 
         const data = await getById(userId)
-        console.log('User data:', data)
         setUser(data)
       } catch (error) {
         console.error('Failed to decode token or fetch user', error)

@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { login } from '@/app/lib/services/auth.service';
-import { useRouter } from 'next/navigation';
+import useUser from '@/app/hooks/useUser';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const router = useRouter();
+  const { login: loginUser } = useUser();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -25,14 +25,13 @@ export default function LoginPage() {
       // TODO: the API should return proper error messages and we should display them here
       const result = await login(email, password);
 
-      if (!result) {
+      if (!result?.accessToken || !result?.refreshToken) {
         setError('Invalid email or password.');
         return;
       }
 
-      localStorage.setItem('accessToken', result.accessToken);
+      loginUser(result.accessToken);
       localStorage.setItem('refreshToken', result.refreshToken);
-      router.push('/');
     } catch {
       setError('An error occurred.');
     } finally {

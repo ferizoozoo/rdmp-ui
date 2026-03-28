@@ -39,6 +39,7 @@ export default function UserProvider({ children }: { children: React.ReactNode }
   function login(newToken: string) {
     localStorage.setItem('accessToken', newToken);
     window.dispatchEvent(new Event(AUTH_TOKEN_EVENT));
+    router.push('/');
   }
 
   function logout() {
