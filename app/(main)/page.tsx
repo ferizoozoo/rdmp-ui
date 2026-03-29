@@ -1,30 +1,83 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  cacheRoadmap,
-  getUserIdFromToken,
-  readRoadmapHistory,
-  RoadmapHistoryEntry,
-} from '@/app/lib/roadmap/utils';
+import { cacheRoadmap, getUserIdFromToken, RoadmapHistoryEntry } from '@/app/lib/roadmap/utils';
+import { getAllRoadmapsByUserId } from '@/app/lib/services/roadmap.service';
 import { Linkbar } from '@/components/linkbar';
 import useUser from '@/app/hooks/useUser';
+
+function inferRoadmapTitle(entry: { roadmap: { id: string; projects: { name: string }[]; skills: { name: string }[] } }) {
+  const primaryProject = entry.roadmap.projects[0]?.name;
+  const primarySkill = entry.roadmap.skills[0]?.name;
+
+  return primaryProject ?? primarySkill ?? `Roadmap ${entry.roadmap.id}`;
+}
+
+function inferRoadmapSummary(entry: { roadmap: { skills: unknown[]; projects: unknown[]; timeline: unknown[] } }) {
+  const parts = [
+    entry.roadmap.skills.length > 0 ? `${entry.roadmap.skills.length} skills` : null,
+    entry.roadmap.projects.length > 0 ? `${entry.roadmap.projects.length} projects` : null,
+    entry.roadmap.timeline.length > 0 ? `${entry.roadmap.timeline.length} months` : null,
+  ].filter(Boolean);
+
+  return parts.join(' • ') || 'Saved roadmap';
+}
 
 export default function RoadmapFlow() {
   const router = useRouter();
   const { token } = useUser();
   const [isLoading, setIsLoading] = useState(false);
-  const history = useMemo<RoadmapHistoryEntry[]>(() => {
+  const [remoteHistory, setRemoteHistory] = useState<RoadmapHistoryEntry[]>([]);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const userId = useMemo(() => {
     if (!token) {
-      return [];
+      return null;
     }
 
-    const userId = getUserIdFromToken(token);
-
-    return userId ? readRoadmapHistory(userId) : [];
+    return getUserIdFromToken(token);
   }, [token]);
+  const history = userId ? remoteHistory : [];
+
+  useEffect(() => {
+    if (!userId) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    async function loadRoadmaps() {
+      try {
+        setHistoryError(null);
+        const roadmaps = await getAllRoadmapsByUserId(userId);
+
+        if (isCancelled) {
+          return;
+        }
+
+        setRemoteHistory(
+          roadmaps.map((entry) => ({
+            id: entry.roadmap.id,
+            title: inferRoadmapTitle(entry),
+            summary: inferRoadmapSummary(entry),
+            createdAt: entry.createdAt,
+            roadmap: entry.roadmap,
+          }))
+        );
+      } catch {
+        if (!isCancelled) {
+          setHistoryError('Could not load your saved roadmaps.');
+        }
+      }
+    }
+
+    loadRoadmaps();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [userId]);
 
   return (
     <main className="flex h-screen flex-col items-center justify-center gap-10 overflow-hidden bg-neutral-950 px-24 pb-24 pt-32 text-neutral-100">
@@ -41,9 +94,24 @@ export default function RoadmapFlow() {
             setIsLoading={setIsLoading}
             onRoadmapCreated={(roadmap) => {
               cacheRoadmap(roadmap);
+              setRemoteHistory((currentHistory) => [
+                {
+                  id: roadmap.id,
+                  title: inferRoadmapTitle({ roadmap }),
+                  summary: inferRoadmapSummary({ roadmap }),
+                  createdAt: new Date().toISOString(),
+                  roadmap,
+                },
+                ...currentHistory.filter((entry) => entry.id !== roadmap.id),
+              ]);
               router.push(`/roadmap?id=${encodeURIComponent(roadmap.id)}`);
             }}
           />
+          {userId && historyError && (
+            <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+              {historyError}
+            </p>
+          )}
           {history.length > 0 && (
             <section className="flex max-h-[26rem] w-full max-w-5xl flex-col rounded-3xl border border-neutral-800 bg-neutral-900/40 p-6">
               <div className="mb-5 flex items-center justify-between gap-4">
